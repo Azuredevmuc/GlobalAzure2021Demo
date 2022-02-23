@@ -1,6 +1,6 @@
 @page "/currentweather"
 
-@using BlazorApp.Shared 
+@using BlazorApp.Shared
 @inject HttpClient Http
 
 <h1>OpenWeatherMap API</h1>
@@ -9,8 +9,8 @@
 
 @if (openForecast != null)
 {
-        <h2>Aktuelles Wetter</h2>
-        <table class="table">
+    <h2>Aktuelles Wetter</h2>
+    <table class="table">
         <thead>
             <tr>
                 <th></th>
@@ -23,46 +23,53 @@
         </thead>
         <tbody>
 
-                <tr>
-                    <td><img src=@(imgSrc + openForecast.Current.Weather[0].Icon + iconExt)> </td>
-                    <td>
-                        @("Temp: " + openForecast.Current.Temp.ToString())
-                    </td>
-                    <td>@openForecast.Current.Uvi.ToString()</td>
-                    <td>@openForecast.Current.Humidity.ToString()</td>
-                    <td>@GetTimeByCurrentClientTimeZone(openForecast.Current.Sunrise)</td>
-                    <td>@GetTimeByCurrentClientTimeZone(openForecast.Current.Sunset)</td>
-                </tr>
+            <tr>
+                <td><img src=@(imgSrc + openForecast.Current.Weather[0].Icon + iconExt)> </td>
+                <td>
+                    @("Temp: " + openForecast.Current.Temp.ToString())
+                </td>
+                <td>@openForecast.Current.Uvi.ToString()</td>
+                <td>@openForecast.Current.Humidity.ToString()</td>
+                <td>@GetTimeByCurrentClientTimeZone(openForecast.Current.Sunrise)</td>
+                <td>@GetTimeByCurrentClientTimeZone(openForecast.Current.Sunset)</td>
+            </tr>
         </tbody>
     </table>
     <p>
-        <h3>Aktuelle Wetter Warnungen</h3>
-                <table class="table">
-        <thead>
-            <tr>
-                <th>Von</th>
-                <th>Bis</th>
-                <th>Warnung vor</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in openForecast.Alerts)
+        @if (openForecast.Alerts != null)
         {
-            <tr>
-                <td>@GetTimeByCurrentClientTimeZone(item.Start)</td>
-                <td>@GetTimeByCurrentClientTimeZone(item.End)</td>
-                <td>@item.Event</td>
-                <td>@item.Description</td>
-            </tr>
-        }
+        <h3>Aktuelle Wetter Warnungen</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Von</th>
+                    <th>Bis</th>
+                    <th>Warnung vor</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                    @foreach (var item in openForecast.Alerts)
+                    {
+                    <tr>
+                        <td>@GetTimeByCurrentClientTimeZone(item.Start)</td>
+                        <td>@GetTimeByCurrentClientTimeZone(item.End)</td>
+                        <td>@item.Event</td>
+                        <td>@item.Description</td>
+                    </tr>
+                    }
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+        }
+        else
+        {
+        <p>No warnings available</p>
+        }
 
     </p>
     <h2>Wettervorhersage</h2>
-        <table class="table">
+    <table class="table">
         <thead>
             <tr>
                 <th></th>
@@ -94,7 +101,7 @@
             }
         </tbody>
     </table>
-    
+
 }
 else if (loadFailed)
 {
@@ -107,7 +114,7 @@ else
 {
     <p><em>Loading weather data from OpenWeatherMap ...</em></p>
 }
-    
+
 
 
 
@@ -121,33 +128,33 @@ else
     private string imgSrc = "http://openweathermap.org/img/wn/";
     protected override async Task OnInitializedAsync()
     {
-      try
-      {
-        loadFailed = false;
-        openForecast = await Http.GetFromJsonAsync<OpenWeatherForecast>("/api/GetOpenWeatherData");
-        if (openForecast == null)
+        try
+        {
+            loadFailed = false;
+            openForecast = await Http.GetFromJsonAsync<OpenWeatherForecast>("/api/GetOpenWeatherData");
+            if (openForecast == null)
+            {
+                loadFailed = true;
+                errorMessage = $"Sorry - etwas ist schief gegangen";
+            }
+        }
+        catch (Exception ex)
         {
             loadFailed = true;
-            errorMessage = $"Sorry - etwas ist schief gegangen";
+            errorMessage = $"Sorry - etwas ist schief gegangen. Fehler: {ex.ToString()}";
         }
-      }
-      catch (Exception ex)
-      {
-        loadFailed = true;
-        errorMessage = $"Sorry - etwas ist schief gegangen. Fehler: {ex.ToString()}";
-      }
     }
     //Berechnet Zeit mit aktueller Zeitzone
-    private string GetTimeByCurrentClientTimeZone (double timestamp)
+    private string GetTimeByCurrentClientTimeZone(double timestamp)
     {
         //Zeitzone des Client
         TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
         //DateTime auf 1.1.1970 setzen
-        System.DateTime dateTime = new System.DateTime(1970,1,1,0,0,0,0);
+        System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
         //DateTime mit Unix Timestamp berechnen
         dateTime = dateTime.AddSeconds(timestamp);
         //DateTime auf aktuelle Zeitzone berechnen
-        dateTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime,localTimeZone);
+        dateTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime, localTimeZone);
         return dateTime.ToShortDateString() + " " + dateTime.ToShortTimeString();
     }
 
